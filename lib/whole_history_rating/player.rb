@@ -44,20 +44,21 @@ module WholeHistoryRating
   
     def hessian(days, sigma2)
       n = days.count
-      Matrix.build(n) do |row,col|
-        if row == col
-          prior = 0
-          prior += -1.0/sigma2[row] if row < (n-1)
-          prior += -1.0/sigma2[row-1] if row > 0
-          days[row].log_likelihood_second_derivative + prior - 0.001
-        elsif row == col-1
-          1.0/sigma2[row]
-        elsif row == col+1
-          1.0/sigma2[col]
-        else
-          0
-        end
+
+      diagonal = []
+      sub_diagonal = []
+
+      (0..(n-1)).each do |row|
+        prior = 0
+        prior += -1.0/sigma2[row] if row < (n-1)
+        prior += -1.0/sigma2[row-1] if row > 0
+        diagonal[row] = days[row].log_likelihood_second_derivative + prior - 0.001
       end
+
+      (0..(n-2)).each do |i|
+        sub_diagonal[i] = 1.0/sigma2[i]
+      end
+      [diagonal, sub_diagonal]
     end
   
     def gradient(r, days, sigma2)
@@ -116,18 +117,18 @@ module WholeHistoryRating
       # sigma squared (used in the prior)
       sigma2 = compute_sigma2
     
-      h = hessian(days, sigma2)
+      diag, sub_diag = hessian(days, sigma2)
       g = gradient(r, days, sigma2)
     
       a = []
-      d = [h[0,0]]
-      b = [h[0,1]]
+      d = [diag[0]]
+      b = [sub_diag[0]]
     
       n = r.size    
       (1..(n-1)).each do |i|
-        a[i] = h[i,i-1] / d[i-1]
-        d[i] = h[i,i] - a[i] * b[i-1]
-        b[i] = h[i,i+1]
+        a[i] = sub_diag[i-1] / d[i-1]
+        d[i] = diag[i] - a[i] * b[i-1]
+        b[i] = sub_diag[i]
       end
     
     
@@ -170,31 +171,31 @@ module WholeHistoryRating
       r = days.map(&:r)
     
       sigma2 = compute_sigma2
-      h = hessian(days, sigma2)
+      diag, sub_diag = hessian(days, sigma2)
       g = gradient(r, days, sigma2)
     
       n = days.count
     
       a = []
-      d = [h[0,0]]
-      b = [h[0,1]]
+      d = [diag[0]]
+      b = [sub_diag[0]]
     
       n = r.size    
       (1..(n-1)).each do |i|
-        a[i] = h[i,i-1] / d[i-1]
-        d[i] = h[i,i] - a[i] * b[i-1]
-        b[i] = h[i,i+1]
+        a[i] = sub_diag[i-1] / d[i-1]
+        d[i] = diag[i] - a[i] * b[i-1]
+        b[i] = sub_diag[i]
       end
     
       dp = []
-      dp[n-1] = h[n-1,n-1]    
+      dp[n-1] = diag[n-1]    
       bp = []
-      bp[n-1] = h[n-1,n-2]
+      bp[n-1] = sub_diag[n-2]
       ap = []
       (n-2).downto(0) do |i|
-        ap[i] = h[i,i+1] / dp[i+1]
-        dp[i] = h[i,i] - ap[i]*bp[i+1]
-        bp[i] = h[i,i-1]
+        ap[i] = sub_diag[i] / dp[i+1]
+        dp[i] = diag[i] - ap[i]*bp[i+1]
+        bp[i] = sub_diag[i-1]
       end
     
       v = []
