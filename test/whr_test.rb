@@ -83,8 +83,10 @@ class WholeHistoryRatingTest < Test::Unit::TestCase
     player.days[0].r = 1
     player.days[1].r = 2
     player.days[2].r = 0
-    prior = player.log_likelihood  - player.days[0].log_likelihood - player.days[1].log_likelihood - player.days[2].log_likelihood
-    assert_in_delta(-97.89279010542154, prior, delta=0.0001)
+    assert_in_delta(-102.65265035957913, player.log_likelihood, delta=0.0001)
+    assert_in_delta(-1.9397850625546684, player.days[0].log_likelihood, delta=0.0001)
+    assert_in_delta(-2.1269280110429727, player.days[1].log_likelihood, delta=0.0001)
+    assert_in_delta(-0.6931471805599453, player.days[2].log_likelihood, delta=0.0001)
   end
 end
 
