@@ -74,5 +74,17 @@ class WholeHistoryRatingTest < Test::Unit::TestCase
       @whr.iterate(10)
     end
   end
+  
+  def test_log_likelihood
+    @whr.create_game("shusaku", "shusai", "B", 1, 0)
+    @whr.create_game("shusaku", "shusai", "W", 4, 0)
+    @whr.create_game("shusaku", "shusai", "W", 10, 0)
+    player = @whr.players["shusaku"]
+    player.days[0].r = 1
+    player.days[1].r = 2
+    player.days[2].r = 0
+    prior = player.log_likelihood  - player.days[0].log_likelihood - player.days[1].log_likelihood - player.days[2].log_likelihood
+    assert_in_delta(-97.89279010542154, prior, delta=0.0001)
+  end
 end
 
