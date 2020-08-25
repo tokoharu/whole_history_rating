@@ -23,11 +23,11 @@ module WholeHistoryRating
         prior = 0
         if i < (n-1)
           rd = days[i].r - days[i+1].r
-          prior += (1/(Math.sqrt(2*Math::PI*sigma2[i]))) * Math.exp(-(rd**2)/2/sigma2[i]) 
+          prior += (1/(Math.sqrt(2*Math::PI*sigma2[i]))) * Math.exp(-(rd**2)/2.0/sigma2[i]) 
         end
         if i > 0
           rd = days[i].r - days[i-1].r
-          prior += (1/(Math.sqrt(2*Math::PI*sigma2[i-1]))) * Math.exp(-(rd**2)/2/sigma2[i-1]) 
+          prior += (1/(Math.sqrt(2*Math::PI*sigma2[i-1]))) * Math.exp(-(rd**2)/2.0/sigma2[i-1]) 
         end
         if prior == 0
           sum += days[i].log_likelihood
